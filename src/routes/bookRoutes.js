@@ -1,16 +1,72 @@
 const express = require('express');
+const { MongoClient, ObjectID } = require('mongodb');
 const bookRouter = express.Router();
-const mysql = require('mysql');
+//const mysql = require('mysql');
 const debug = require('debug')('app:bookRoutes');
 
-var connection = mysql.createConnection({
-  host     : 'localhost',
-  user     : 'root',
-  password : '',
-  database : 'express'
-});
+// var connection = mysql.createConnection({
+//   host     : 'localhost',
+//   user     : 'root',
+//   password : '',
+//   database : 'express'
+// });
 
 function router(nav){
+
+  bookRouter.route('/')
+  .get((req, res) => {
+    const url = 'mongodb://localhost:27017';
+    const dbName = 'books';
+
+    (async function mongo(){
+      let client;
+      try {
+        client = await MongoClient.connect(url);
+        debug('Connected Successfully to the SERVER!!!');
+
+        const db = client.db(dbName);
+
+        const col  = await db.collection('books');
+        const books = await col.find().toArray();
+        debug(books);
+        res.render('bookListView', {
+          nav,
+          title: 'My title should be  here!',
+          books
+        });
+      } catch(err){
+        debug(err.stack);
+      }
+      client.close();
+    }())
+    bookRouter.route('/:id').get((req, res) => {
+      const { id } = req.params;
+      const url = 'mongodb://localhost:27017';
+      const dbName = 'books';
+
+      (async function mongo(){
+        let client;
+        try {
+          client = await MongoClient.connect(url);
+          debug('Connected Successfully to the SERVER!!!');
+
+          const db = client.db(dbName);
+
+          const col  = await db.collection('books');
+          const book = await col.findOne({ _id: new ObjectID(id)});
+          debug(book);
+          res.render('bookView', {
+            nav,
+            title: 'My title should be  here!',
+            book
+          });
+        }catch(err){
+          debug(err.stack);
+        }
+        client.close();
+      }())
+    });
+  });
   // const books = [
   //   {
   //     title: 'One Indian Girl',
@@ -44,26 +100,26 @@ function router(nav){
   //   }
   // ];
 
-  connection.query('SELECT * FROM books', function (error, books, fields) {
-    if (error) throw error;
-    bookRouter.route('/').get((req, res) => {
-      res.render('bookListView', {
-        nav,
-        title: 'My title should be  here!',
-        books
-      });
-    });
-    bookRouter.route('/:id').get((req, res) => {
-      const id = req.params.id;
-      res.render('bookView', {
-        nav,
-        title: 'My title should be  here!',
-        book: books[id]
-      });
-    });
+  // connection.query('SELECT * FROM books', function (error, books, fields) {
+  //   if (error) throw error;
+  //   bookRouter.route('/').get((req, res) => {
+  //     res.render('bookListView', {
+  //       nav,
+  //       title: 'My title should be  here!',
+  //       books
+  //     });
+  //   });
+  //   bookRouter.route('/:id').get((req, res) => {
+  //     const id = req.params.id;
+  //     res.render('bookView', {
+  //       nav,
+  //       title: 'My title should be  here!',
+  //       book: books[id]
+  //     });
+  //   });
     //debug(results);
     //console.log('The solution is: ', results);
-  })
+  //})
 
   // bookRouter.route('/').get((req, res) => {
   //   res.render('bookListView', {
