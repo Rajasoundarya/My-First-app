@@ -19,6 +19,10 @@ const nav = [
 app.use(morgan('tiny'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false}));
+app.use(cookieParser());
+app.use(session({ secret: 'library'}));
+
+require('./src/config/passport')(app);
 app.use(express.static(path.join(__dirname, '/public/')));
 app.use(
   '/css',
